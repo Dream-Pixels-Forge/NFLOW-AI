@@ -1,0 +1,233 @@
+import React, { useState, useRef } from 'react';
+import { Database, Globe, FileText, Server, Workflow, ChevronDown, ChevronRight, Power, Upload, Plus, Trash2, X, Link } from 'lucide-react';
+import { ToolState } from '../types';
+
+interface ToolsPanelProps {
+  toolState: ToolState;
+  setToolState: React.Dispatch<React.SetStateAction<ToolState>>;
+}
+
+export const ToolsPanel: React.FC<ToolsPanelProps> = ({ toolState, setToolState }) => {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const toggleExpand = (id: string) => {
+    setExpanded(expanded === id ? null : id);
+  };
+
+  const toggleTool = (id: keyof ToolState) => {
+    setToolState(prev => ({
+      ...prev,
+      [id]: { ...prev[id], active: !prev[id].active }
+    }));
+  };
+
+  const handleClearContext = () => {
+    setToolState(prev => ({
+      ...prev,
+      rag: { ...prev.rag, content: [] },
+      doc: { ...prev.doc, files: [] }
+    }));
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const text = event.target?.result as string;
+      if (text) {
+        setToolState(prev => ({
+          ...prev,
+          doc: { ...prev.doc, files: [...prev.doc.files, file.name] },
+          rag: { ...prev.rag, content: [...prev.rag.content, `FILE: ${file.name}\nCONTENT:\n${text}`], active: true }
+        }));
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const tools = [
+    { 
+      id: 'mcp' as const, 
+      name: 'MCP BRIDGE', 
+      icon: Server, 
+      description: 'Model Context Protocol',
+      renderDetails: () => (
+        <div className="mt-3 space-y-2">
+           <div className="flex items-center gap-2">
+              <input 
+                type="text" 
+                value={toolState.mcp.port}
+                onChange={(e) => setToolState(prev => ({ ...prev, mcp: { ...prev.mcp, port: e.target.value } }))}
+                className="bg-nexus-900 border border-nexus-border text-xs p-1 font-mono w-24 text-nexus-accent focus:outline-none focus:border-nexus-accent"
+                placeholder="PORT"
+              />
+              <span className="text-[10px] text-nexus-dim">LOCALHOST</span>
+           </div>
+           <div className="text-[10px] text-gray-500">
+              Enables generic connection to local MCP servers for tool execution.
+           </div>
+        </div>
+      )
+    },
+    { 
+      id: 'rag' as const, 
+      name: 'RAG ENGINE', 
+      icon: Database, 
+      description: 'Vector Knowledge Base',
+      renderDetails: () => (
+        <div className="mt-3 space-y-2">
+           <div className="flex flex-col gap-2">
+             <div className="text-[10px] text-nexus-dim uppercase flex justify-between">
+                <span>Active Context</span>
+                <span className="text-nexus-dim">{toolState.rag.content.length} snippets</span>
+             </div>
+             <div className="max-h-24 overflow-y-auto custom-scrollbar border border-nexus-dim/20 p-2 bg-nexus-900/50">
+                {toolState.rag.content.length === 0 ? (
+                  <span className="text-nexus-dim italic text-[10px]">No context loaded...</span>
+                ) : (
+                  toolState.rag.content.map((c, i) => (
+                    <div key={i} className="text-[9px] text-gray-400 border-b border-nexus-dim/10 pb-1 mb-1 truncate">
+                      {c.substring(0, 50)}...
+                    </div>
+                  ))
+                )}
+             </div>
+             <button 
+                onClick={handleClearContext}
+                className="text-[9px] text-red-400 hover:text-red-300 text-left flex items-center gap-1 transition-colors"
+             >
+               <Trash2 size={10} /> CLEAR CONTEXT
+             </button>
+           </div>
+        </div>
+      )
+    },
+    { 
+      id: 'fetch' as const, 
+      name: 'WEB FETCH', 
+      icon: Globe, 
+      description: 'External Resource Proxy',
+      renderDetails: () => (
+        <div className="mt-3 space-y-2">
+            <input 
+              type="text" 
+              value={toolState.fetch.targetUrl}
+              onChange={(e) => setToolState(prev => ({ ...prev, fetch: { ...prev.fetch, targetUrl: e.target.value } }))}
+              className="w-full bg-nexus-900 border border-nexus-border text-xs p-2 font-mono text-gray-300 focus:outline-none focus:border-nexus-accent"
+              placeholder="https://api.example.com/v1..."
+            />
+        </div>
+      )
+    },
+    { 
+      id: 'doc' as const, 
+      name: 'DOC LOADER', 
+      icon: FileText, 
+      description: 'File System Watcher',
+      renderDetails: () => (
+        <div className="mt-3 space-y-2">
+           <input 
+             type="file" 
+             ref={fileInputRef}
+             className="hidden" 
+             onChange={handleFileUpload}
+             accept=".txt,.md,.json,.js,.ts,.tsx,.css"
+           />
+           <button 
+             onClick={() => fileInputRef.current?.click()}
+             className="flex items-center gap-2 w-full justify-center bg-nexus-900 hover:bg-nexus-800 border border-nexus-border border-dashed text-xs py-2 text-nexus-dim hover:text-nexus-accent transition-colors"
+           >
+             <Upload size={12} />
+             <span>LOAD FILE</span>
+           </button>
+           <div className="space-y-1">
+             {toolState.doc.files.map((f, i) => (
+               <div key={i} className="flex items-center gap-1 text-[9px] text-nexus-accent">
+                 <FileText size={8} /> {f}
+               </div>
+             ))}
+             {toolState.doc.files.length > 0 && (
+                <div className="pt-2 mt-2 border-t border-nexus-border/30 flex items-center justify-between">
+                    <div className="flex items-center gap-1 text-[9px] text-nexus-dim">
+                        <Link size={8} />
+                        <span>SYNCED TO RAG</span>
+                    </div>
+                    <button 
+                        onClick={handleClearContext}
+                        className="text-[9px] text-red-400 hover:text-red-300 flex items-center gap-1"
+                    >
+                        <X size={10} /> UNLOAD
+                    </button>
+                </div>
+             )}
+           </div>
+        </div>
+      )
+    }
+  ];
+
+  return (
+    <div className="flex flex-col gap-3 p-4 bg-nexus-800/50 border-l border-nexus-border min-h-full">
+        <h3 className="text-nexus-accent font-mono text-sm uppercase tracking-wider flex items-center gap-2 mb-2">
+        <Workflow className="w-4 h-4" /> Tool Configuration
+      </h3>
+      
+      {tools.map((tool) => {
+        const isActive = toolState[tool.id].active;
+        const isExpanded = expanded === tool.id;
+
+        return (
+          <div key={tool.id} className={`bg-nexus-900 border transition-all duration-300 overflow-hidden ${isActive ? 'border-nexus-accent/40' : 'border-nexus-border'}`}>
+            <div 
+              className="p-3 cursor-pointer hover:bg-nexus-800/50 flex items-center justify-between"
+              onClick={() => toggleExpand(tool.id)}
+            >
+              <div className="flex items-center gap-3">
+                 <div className={`${isActive ? 'text-nexus-accent' : 'text-gray-600'}`}>
+                   <tool.icon size={16} />
+                 </div>
+                 <div>
+                    <div className="text-xs font-bold font-mono text-gray-200">{tool.name}</div>
+                    <div className="text-[9px] text-gray-500 font-mono">{tool.description}</div>
+                 </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); toggleTool(tool.id); }}
+                  className={`p-1 rounded transition-colors ${isActive ? 'text-nexus-accent bg-nexus-accent/10' : 'text-gray-600 hover:text-gray-400'}`}
+                >
+                  <Power size={14} />
+                </button>
+                {isExpanded ? <ChevronDown size={14} className="text-gray-600"/> : <ChevronRight size={14} className="text-gray-600"/>}
+              </div>
+            </div>
+
+            {/* Expansion Panel */}
+            <div className={`transition-all duration-300 ease-in-out px-3 bg-black/20 ${isExpanded ? 'max-h-48 py-3 border-t border-nexus-border' : 'max-h-0 py-0'}`}>
+               {tool.renderDetails()}
+            </div>
+          </div>
+        );
+      })}
+      
+      <div className="mt-auto pt-4">
+        <div className="p-2 rounded border border-nexus-dim/20 bg-nexus-900/50">
+          <div className="flex justify-between text-[10px] font-mono text-nexus-dim mb-1">
+              <span>CONTEXT WINDOW</span>
+              <span>{Math.min(100, (toolState.rag.content.length * 5) + 1)}%</span>
+          </div>
+          <div className="h-1 bg-nexus-900 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-nexus-accent transition-all duration-500" 
+                style={{ width: `${Math.min(100, (toolState.rag.content.length * 5) + 1)}%` }}
+              ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};

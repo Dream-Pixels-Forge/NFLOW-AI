@@ -1,0 +1,5 @@
+{
+  "name": "NEXUSFLOW",
+  "description": "A fully local-first style AI development agency terminal interface featuring 8 specialized agents powered by Gemini.",
+  "requestFramePermissions": []
+}
