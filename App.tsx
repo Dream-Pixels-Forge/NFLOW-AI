@@ -29,6 +29,8 @@ import {
 } from 'lucide-react';
 import { AGENTS, AgentMode, Message, ToolState, Task, AppSettings, VirtualFile } from './types';
 import { sendMessageToAgent } from './services/aiService';
+import { initializeStartupTracking, completeStartup, reportStartupError, setStartupStatusCallback } from './src/utils/StartupTracker';
+import { checkOllamaDependencies } from './src/utils/DependencyChecker';
 import { SystemMonitor } from './components/SystemMonitor';
 import { ToolsPanel } from './components/ToolsPanel';
 import { AgentGrid } from './components/AgentGrid';
@@ -135,6 +137,34 @@ export default function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Startup tracking and dependency checks
+  useEffect(() => {
+    // Initialize startup tracking
+    initializeStartupTracking();
+
+    // Check Ollama dependencies if Ollama is selected
+    if (settings.aiProvider === 'ollama') {
+      checkOllamaDependencies(settings.ollamaUrl, settings.ollamaGeneralModel, settings.ollamaCodingModel)
+        .then((result) => {
+          if (result.success) {
+            completeStartup();
+          } else {
+            // Report error with instruction on how to fix
+            const errorMsg = `Dependency Check Failed: ${result.message}\n\nAction Steps:\n${result.actionSteps.join('\n')}`;
+            reportStartupError(errorMsg);
+            console.error('Ollama Dependency Check Failed:', result);
+          }
+        })
+        .catch((error) => {
+          console.error('Error checking Ollama dependencies:', error);
+          reportStartupError('Failed to verify Ollama dependencies. Please check if Ollama is running and models are available.');
+        });
+    } else {
+      // If not using Ollama, consider startup complete
+      setTimeout(completeStartup, 1000); // Small delay for better UX
+    }
+  }, [settings.aiProvider, settings.ollamaUrl, settings.ollamaGeneralModel, settings.ollamaCodingModel]);
+
   // Boot animation timer
   useEffect(() => {
     const timer = setTimeout(() => setShowBootSequence(false), 2500);
@@ -232,9 +262,16 @@ export default function App() {
   // Parse Files from CODER/ARCHITECT/TEST outputs
   const extractFilesFromContent = (content: string) => {
     // Regex: FILE: filename.ext \n ```lang \n content \n ```
-    // Improved regex to handle varied whitespace and Windows line endings
-    // Now supports optional **FILE:** bolding common in some LLM outputs
-    const fileRegex = /(?:FILE:|\*\*FILE:\*\*)\s*([^\n\r]+)[\r\n]+```(\w*)[\r\n]+([\s\S]*?)```/g;
+    // Improved regex handles varied whitespace, bolding, and Windows line endings
+    // Matches:
+    // 1. "FILE:" or "**FILE:**"
+    // 2. Filename (Group 1)
+    // 3. Optional whitespace/newlines
+    // 4. Code block start ``` + language (Group 2)
+    // 5. Content (Group 3)
+    // 6. Code block end ```
+    const fileRegex = /(?:FILE:|\*\*FILE:\*\*)[ \t]*([^\r\n]+)(?:[\r\n]+\s*)*```(\w*)(?:[\r\n]+)([\s\S]*?)```/g;
+    
     let match;
     const newFiles: VirtualFile[] = [];
     

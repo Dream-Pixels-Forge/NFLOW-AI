@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
-import { Settings, X, Volume2, VolumeX, MousePointer2, Zap, Gauge, Server, Cloud, Database, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Settings, X, Volume2, VolumeX, MousePointer2, Zap, Gauge, Server, Cloud, Database, RefreshCw, AlertTriangle, CheckCircle2, Wifi } from 'lucide-react';
 import { AppSettings, SuggestionLevel, AIProvider } from '../types';
 import { getOllamaModels } from '../services/ollamaService';
 
@@ -26,24 +25,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onUpdate
   const [availableModels, setAvailableModels] = useState<string[]>([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'unknown' | 'connected' | 'error'>('unknown');
 
   // Fetch models when tab opens or URL changes
   useEffect(() => {
     if (activeTab === 'backend' && settings.aiProvider === 'ollama') {
-        fetchModels();
+        // Don't auto-fetch immediately to avoid spamming if user is typing URL
+        // User should click Test Connection for definitive check
     }
   }, [activeTab, settings.aiProvider]);
 
   const fetchModels = async () => {
     setIsFetchingModels(true);
     setFetchError(null);
+    setConnectionStatus('unknown');
+    
     try {
       const models = await getOllamaModels(settings.ollamaUrl);
       if (models.length === 0) throw new Error("No models returned");
       setAvailableModels(models);
+      setConnectionStatus('connected');
     } catch (e: any) {
       console.warn("Auto-fetch failed, using fallbacks", e);
-      setFetchError("Connection blocked or failed.");
+      setFetchError("Connection failed or blocked.");
+      setConnectionStatus('error');
       setAvailableModels(FALLBACK_MODELS); // Fallback so user can still select
     } finally {
       setIsFetchingModels(false);
@@ -152,7 +157,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onUpdate
                         </div>
                         </div>
                         <div className={`w-8 h-4 rounded-full relative transition-colors ${settings.soundEnabled ? 'bg-nexus-accent' : 'bg-gray-700'}`}>
-                            <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${settings.soundEnabled ? 'left-4.5' : 'left-0.5'}`} />
+                            <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${settings.soundEnabled ? 'left-5' : 'left-0.5'}`} />
                         </div>
                     </div>
 
@@ -167,7 +172,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onUpdate
                         </div>
                         </div>
                         <div className={`w-8 h-4 rounded-full relative transition-colors ${settings.autoScroll ? 'bg-nexus-accent' : 'bg-gray-700'}`}>
-                            <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${settings.autoScroll ? 'left-4.5' : 'left-0.5'}`} />
+                            <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${settings.autoScroll ? 'left-5' : 'left-0.5'}`} />
                         </div>
                     </div>
 
@@ -182,7 +187,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onUpdate
                         </div>
                         </div>
                         <div className={`w-8 h-4 rounded-full relative transition-colors ${!settings.animations ? 'bg-nexus-accent' : 'bg-gray-700'}`}>
-                            <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${!settings.animations ? 'left-4.5' : 'left-0.5'}`} />
+                            <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${!settings.animations ? 'left-5' : 'left-0.5'}`} />
                         </div>
                     </div>
                 </div>
@@ -222,29 +227,50 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ settings, onUpdate
                     <div className="p-4 rounded bg-nexus-800/30 border border-orange-500/30 space-y-4 animate-fade-in">
                         <div className="flex justify-between items-center">
                             <label className="text-[10px] text-orange-400 uppercase font-bold">Connection URL</label>
-                            <button onClick={fetchModels} className="text-orange-400 hover:text-white" title="Refresh Models">
-                                <RefreshCw size={12} className={isFetchingModels ? 'animate-spin' : ''}/>
+                            
+                        </div>
+                        <div className="flex gap-2">
+                             <input 
+                                type="text" 
+                                value={settings.ollamaUrl}
+                                onChange={(e) => onUpdate({ ...settings, ollamaUrl: e.target.value })}
+                                className="flex-1 bg-nexus-900 border border-nexus-border text-xs p-2 text-gray-300 rounded focus:border-orange-500 focus:outline-none font-mono"
+                                placeholder="http://localhost:11434"
+                            />
+                            <button 
+                                onClick={fetchModels} 
+                                disabled={isFetchingModels}
+                                className={`px-3 rounded border border-orange-500/50 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 text-[10px] font-bold tracking-wider flex items-center gap-2 transition-all ${isFetchingModels ? 'opacity-50' : ''}`}
+                            >
+                                {isFetchingModels ? (
+                                    <RefreshCw size={12} className="animate-spin" />
+                                ) : (
+                                    <Wifi size={12} />
+                                )}
+                                TEST CONNECTION
                             </button>
                         </div>
-                        <input 
-                            type="text" 
-                            value={settings.ollamaUrl}
-                            onChange={(e) => onUpdate({ ...settings, ollamaUrl: e.target.value })}
-                            className="w-full bg-nexus-900 border border-nexus-border text-xs p-2 text-gray-300 rounded focus:border-orange-500 focus:outline-none font-mono"
-                            placeholder="http://localhost:11434"
-                        />
+
+                        {/* Connection Status Indicator */}
+                        {connectionStatus === 'connected' && (
+                            <div className="text-[10px] text-green-400 flex items-center gap-2 bg-green-900/10 p-2 rounded border border-green-900/30">
+                                <CheckCircle2 size={12} />
+                                <span>ONLINE: Successfully connected to Ollama.</span>
+                            </div>
+                        )}
                         
                         {/* Error Notice */}
-                        {fetchError && (
+                        {fetchError && connectionStatus === 'error' && (
                              <div className="text-[9px] bg-red-500/10 border border-red-500/30 p-2 rounded text-red-300 flex gap-2 items-start">
                                 <AlertTriangle size={12} className="shrink-0 mt-0.5" />
                                 <div>
-                                    <div className="font-bold mb-1">{fetchError}</div>
-                                    Using fallback model list. To fix, ensure Ollama is running and allow browser origins:
-                                    <code className="block bg-black/30 p-1 mt-1 rounded text-orange-300 select-all">
+                                    <div className="font-bold mb-1">CONNECTION FAILED</div>
+                                    <p className="mb-2">Your browser blocked the request. You must allow CORS.</p>
+                                    Run this command in your terminal and restart Ollama:
+                                    <code className="block bg-black/30 p-1 mt-1 rounded text-orange-300 select-all font-mono">
                                        launchctl setenv OLLAMA_ORIGINS "*"
                                     </code>
-                                    (Restart Ollama after setting)
+                                    <span className="opacity-50 mt-1 block">(Windows: Set environment variable OLLAMA_ORIGINS to *)</span>
                                 </div>
                              </div>
                         )}

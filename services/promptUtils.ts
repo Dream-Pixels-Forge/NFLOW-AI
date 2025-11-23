@@ -78,7 +78,11 @@ export const getSystemInstruction = (
   export const Button = () => <button>Click Me</button>;
   \`\`\`
   
-  Always separate multiple files clearly. Do NOT include "Here is the file:" text before the FILE: line.
+  CRITICAL RULES:
+  1. The "FILE: ..." line must be on its own line.
+  2. The code block must start on the line immediately following the FILE line or with a single empty line in between.
+  3. Do not include any other text like "Here is the file:" before the code block.
+  4. Always separate multiple files clearly.
   `;
 
   switch (mode) {

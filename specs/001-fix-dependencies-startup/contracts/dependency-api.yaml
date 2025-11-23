@@ -1,0 +1,122 @@
+# Dependency Verification API Contract
+
+**Feature**: 001-fix-dependencies-startup
+**Date**: 2025-01-23
+**Service**: NexusFlow Dependency Verification
+
+## Purpose
+This contract defines the interface for dependency verification and error reporting functionality in NexusFlow.
+
+## Endpoints
+
+### GET /api/dependencies/verify
+Verify the status of all required dependencies
+
+**Request**:
+- Method: GET
+- Path: /api/dependencies/verify
+- Headers: None required
+- Query params: None
+
+**Response**:
+- Status: 200 OK
+- Content-Type: application/json
+
+**Response Body**:
+```json
+{
+  "success": true,
+  "timestamp": "2025-01-23T10:00:00Z",
+  "missingDependencies": [],
+  "incompatibleDependencies": [],
+  "message": "All required dependencies are properly installed",
+  "actionSteps": []
+}
+```
+
+**Error Response** (422 Unprocessable Entity):
+```json
+{
+  "success": false,
+  "timestamp": "2025-01-23T10:00:00Z",
+  "missingDependencies": [
+    {
+      "name": "react",
+      "version": "18.3.1",
+      "required": true,
+      "description": "React library for UI components"
+    }
+  ],
+  "incompatibleDependencies": [
+    {
+      "name": "typescript",
+      "version": "4.9.5",
+      "required": true,
+      "description": "TypeScript compiler"
+    }
+  ],
+  "message": "Some dependencies are missing or incompatible",
+  "actionSteps": [
+    "Run 'npm install' to install missing dependencies",
+    "Check your Node.js version (requires v18+)"
+  ]
+}
+```
+
+### GET /api/startup/status
+Get the current status of the application startup process
+
+**Request**:
+- Method: GET
+- Path: /api/startup/status
+- Headers: None required
+
+**Response**:
+- Status: 200 OK
+- Content-Type: application/json
+
+**Response Body**:
+```json
+{
+  "status": "ready",
+  "message": "Application is running and ready",
+  "dependenciesVerified": true,
+  "startTime": "2025-01-23T09:59:30Z",
+  "elapsedTime": 45000
+}
+```
+
+Status values: 
+- "not-started": Application has not begun startup
+- "verifying-dependencies": Checking dependency status
+- "dependencies-ok": Dependency check passed
+- "starting": Application is starting up
+- "ready": Application is fully started and ready
+- "error": An error occurred during startup
+
+## Error Reporting Endpoint
+
+### POST /api/errors/dependency
+Report a dependency-related error
+
+**Request**:
+- Method: POST
+- Path: /api/errors/dependency
+- Headers: 
+  - Content-Type: application/json
+- Body:
+```json
+{
+  "errorId": "dep-001",
+  "dependencyName": "react",
+  "errorMessage": "Module not found",
+  "userMessage": "The React library could not be loaded",
+  "suggestedSolution": "Run 'npm install react' to install the missing dependency",
+  "severity": "critical"
+}
+```
+
+**Response**:
+- Status: 201 Created
+- Content-Type: application/json
+- Body: Same as request with additional `timestamp` field

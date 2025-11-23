@@ -2,9 +2,7 @@
 
 NexusFlow is a local-first, terminal-style interface that orchestrates a team of specialized AI agents to build software. It mimics a professional development environment with role-based agents (Architect, Coder, QA, Security), a virtual file system, and integrated telemetry.
 
-
-<img width="1920" height="970" alt="Screenshot 2025-11-23 040048" src="https://github.com/user-attachments/assets/1f0d12cf-4adc-4ebb-80bb-3ea3c0a51021" />
-
+![NexusFlow Terminal](https://via.placeholder.com/800x450/0a0a0a/00ff9d?text=NEXUSFLOW+TERMINAL)
 
 ## 🚀 Features
 
@@ -17,106 +15,105 @@ NexusFlow is a local-first, terminal-style interface that orchestrates a team of
 - **System Telemetry**: Real-time visualization of CPU, Memory, and Network simulation.
 - **Cyberpunk/Sci-Fi UI**: CRT scanlines, retro fonts, and immersive animations.
 
-## 🛠️ Installation & Local Setup
+## ⚡ Quickstart (Vite)
 
-Since you have **Node.js**, **VSCode**, and **Ollama** installed, follow these steps to run NexusFlow on your PC.
+This project uses **Vite** instead of Create React App to ensure fast startup and zero vulnerabilities.
 
-### 1. Create Project Folder
-Create a new folder named `nexusflow` and open it in VSCode.
+### 1. Prerequisites
+- **Node.js** (v18+)
+- **Ollama** (optional, for local AI)
 
-### 2. Create `package.json`
-Create a file named `package.json` in the root of your folder with the following content:
+### 2. Setup Project
+Create a folder and install dependencies:
 
-```json
-{
-  "name": "nexusflow",
-  "version": "1.0.0",
-  "dependencies": {
-    "@google/genai": "^1.30.0",
-    "lucide-react": "^0.554.0",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-scripts": "5.0.1",
-    "recharts": "^3.4.1",
-    "web-vitals": "^2.1.4"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build"
-  },
-  "browserslist": {
-    "production": [">0.2%", "not dead", "not op_mini all"],
-    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
-  }
-}
-```
-
-### 3. Copy Source Files
-Copy all the provided source files (`App.tsx`, `types.ts`, `index.tsx`, etc.) into a `src/` folder inside your project.
-*Note: Move `index.html` to a `public/` folder.*
-
-Structure:
-```
-nexusflow/
-├── public/
-│   └── index.html
-├── src/
-│   ├── components/
-│   ├── services/
-│   ├── App.tsx
-│   ├── index.tsx
-│   └── types.ts
-└── package.json
-```
-
-### 4. Install Dependencies
-Open your terminal in the folder and run:
 ```bash
-npm install
+# 1. Create project folder
+mkdir nexusflow
+cd nexusflow
+
+# 2. Initialize package.json
+npm init -y
+
+# 3. Install dependencies
+npm install react react-dom lucide-react recharts @google/genai
+
+# 4. Install Dev dependencies (Vite + TypeScript)
+npm install -D vite @vitejs/plugin-react typescript @types/react @types/react-dom autoprefixer postcss tailwindcss
 ```
 
-### 5. Configure Ollama (CRITICAL)
-For the web app to talk to your local Ollama, you must allow browser requests (CORS).
+### 3. Verify Dependencies
+Before running the application, verify all dependencies are properly installed:
 
-**Mac/Linux:**
+```bash
+npm run check-deps
+```
+
+This will run the dependency verification tool to ensure everything is properly set up.
+
+### 4. Configure Vite
+Ensure `vite.config.ts` exists in the root:
+```ts
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+})
+```
+
+### 5. Run the App
+```bash
+npx vite
+```
+Open `http://localhost:5173`.
+
+---
+
+## 🤖 Connecting Local AI (Ollama)
+
+To use NexusFlow with a local model (e.g., Llama 3), you must configure Ollama to allow browser requests.
+
+### Step 1: Install a Model
+```bash
+ollama pull llama3
+```
+
+### Step 2: Configure CORS (Crucial!)
+By default, browsers block websites from talking to local servers. You must enable CORS.
+
+**Mac / Linux:**
 ```bash
 launchctl setenv OLLAMA_ORIGINS "*"
-# Restart Ollama app
+# Restart the Ollama app completely after running this
 ```
 
 **Windows:**
-1. Quit Ollama from the taskbar.
-2. Open **Environment Variables** setting in Windows.
-3. Add a new System Variable: `OLLAMA_ORIGINS` with value `*`.
-4. Start Ollama again.
+1. Quit Ollama from the taskbar (Right-click icon -> Quit).
+2. Open **Environment Variables** (search in Start menu).
+3. Under **System variables**, click **New**.
+   - Name: `OLLAMA_ORIGINS`
+   - Value: `*`
+4. Click OK, then **Start Ollama** again.
 
-### 6. Run the App
-```bash
-npm start
-```
-Your browser should open to `http://localhost:3000`.
+### Step 3: Test Connection
+1. Open NexusFlow Settings (Gear Icon).
+2. Go to **Backend Services**.
+3. Select **OLLAMA LOCAL**.
+4. Click **[ TEST CONNECTION ]**.
 
-## 💻 How to Test "Real Situation"
+---
 
-1. **Select Backend**: Click the **Settings (Gear Icon)** > **Backend Services** > Select **OLLAMA LOCAL**.
-2. **Select Model**: Choose `llama3` or `codellama` from the dropdown (ensure you pulled them via `ollama pull llama3`).
-3. **Simulate Work**:
-   - Switch to **CODER** agent: Type `/coder`.
-   - Prompt: "Create a Python script to scrape a website."
-   - **Verify**: When the agent finishes, click the **VSCode Bridge** button (Laptop Icon) in the top right header. You should see the file `scraper.py` generated in the virtual file explorer.
-
-## 🤖 Agent Roles & Commands
+## 📝 Agent Commands
 
 | Command | Agent | Role |
 |---------|-------|------|
-| `/chat` | **NEXUS-CHAT** | PM |
-| `/plan` | **NEXUS-PLAN** | Product |
-| `/arch` | **NEXUS-ARCH** | Architect |
-| `/code` | **NEXUS-CODE** | Developer |
-| `/test` | **NEXUS-TEST** | QA |
-| `/sec` | **NEXUS-SEC** | Security |
-| `/ops` | **NEXUS-OPS** | DevOps |
-| `/mon` | **NEXUS-MON** | SRE |
+| `/chat` | **NEXUS-CHAT** | PM & Orchestrator |
+| `/plan` | **NEXUS-PLAN** | Requirements & Stories |
+| `/arch` | **NEXUS-ARCH** | System Architecture |
+| `/code` | **NEXUS-CODE** | Implementation (Generates Files) |
+| `/test` | **NEXUS-TEST** | QA & Testing |
+| `/sec` | **NEXUS-SEC** | Security Audit |
+| `/ops` | **NEXUS-OPS** | DevOps & CI/CD |
 
 ## 📄 License
 
