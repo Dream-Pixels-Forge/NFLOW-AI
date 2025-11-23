@@ -50,6 +50,8 @@ npm run check-deps
 
 This will run the dependency verification tool to ensure everything is properly set up.
 
+**Note**: When using Ollama as your AI provider, the application will automatically verify Ollama connectivity and required models during startup. If issues are detected, the app will display clear error messages with actionable steps to resolve them.
+
 ### 4. Configure Vite
 Ensure `vite.config.ts` exists in the root:
 ```ts
@@ -94,14 +96,42 @@ launchctl setenv OLLAMA_ORIGINS "*"
    - Name: `OLLAMA_ORIGINS`
    - Value: `*`
 4. Click OK, then **Start Ollama** again.
-
 ### Step 3: Test Connection
 1. Open NexusFlow Settings (Gear Icon).
 2. Go to **Backend Services**.
 3. Select **OLLAMA LOCAL**.
 4. Click **[ TEST CONNECTION ]**.
 
+### Automatic Startup Validation
+When you start NexusFlow with Ollama enabled, the application will automatically:
+
+- ✅ Check if Ollama service is running
+- ✅ Verify required AI models are downloaded
+- ✅ Validate network connectivity
+
+If any issues are detected, you'll see clear error messages with actionable steps to resolve them.
+
+### Troubleshooting Common Issues
+
+**"Cannot connect to Ollama" Error:**
+- Ensure Ollama is running: `ollama serve`
+- Check that `OLLAMA_ORIGINS="*"` environment variable is set
+- Restart Ollama after changing environment variables
+- Verify the URL in settings: default is `http://localhost:11434`
+
+**"Model not found" Error:**
+- Pull the required models: `ollama pull llama3`
+- For coding tasks: `ollama pull llama3` (or your preferred coding model)
+- Check available models: `ollama list`
+
+**Connection blocked by CORS:**
+- Set environment variable: `OLLAMA_ORIGINS="*"`
+- Restart Ollama completely after setting the variable
+- Clear browser cache if issues persist
+
 ---
+
+## 🛠️ Troubleshooting
 
 ## 📝 Agent Commands
 
