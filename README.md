@@ -145,6 +145,21 @@ If any issues are detected, you'll see clear error messages with actionable step
 | `/sec` | **NEXUS-SEC** | Security Audit |
 | `/ops` | **NEXUS-OPS** | DevOps & CI/CD |
 
-## 📄 License
+## 🤝 Contributing
 
-Distributed under the MIT License.
+NexusFlow is an open-source project dedicated to pushing the boundaries of AI-assisted development. The Ollama integration represents a significant leap forward in local AI accessibility and dependency management.
+
+### How to Contribute
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Contact & Acknowledgments
+- **Project Maintainer**: [dream.pixels.forge@gmail.com](mailto:dream.pixels.forge@gmail.com)
+- **Open Source Vision**: This project aims to democratize access to advanced AI development tools
+- **Special Thanks**: To all contributors who believe in the power of local-first AI solutions
+
+### ⭐ Support the Project
+If you find NexusFlow valuable, please consider giving it a star on GitHub! Your support helps grow the community and drive further development of innovative AI development tools.
